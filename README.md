@@ -1,0 +1,2 @@
+# Tampermonky_Keyword_Dictionary_Notes
+一個能夠在各網站以關鍵字紀錄筆記的油猴插件
