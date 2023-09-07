@@ -2,6 +2,8 @@
 一個能夠在各網站以關鍵字紀錄筆記的油猴插件 \
 A Tampermonky plug-in that can record notes based on keywords on various websites
 
+![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_sidepicture.png)
+
 **注意 | Notice :** \
 現有版本只支持繁體中文 | The current version only supports Traditional Chinese
 
