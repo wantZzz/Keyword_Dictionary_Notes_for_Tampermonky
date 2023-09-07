@@ -1,6 +1,10 @@
 # Tampermonky_Keyword_Dictionary_Notes
 一個能夠在各網站以關鍵字紀錄筆記的油猴插件
 
+## 📖 取得最新版本
+
+https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
+
 ## 📖 使用須知
 
 **注意! 部分網站可能會無法正常顯示插件或是被遮擋!**
