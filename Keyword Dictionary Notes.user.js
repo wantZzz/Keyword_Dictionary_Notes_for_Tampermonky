@@ -646,7 +646,7 @@
 
 	function sidebar_new_keword_button_click(){
 		var new_keyword = window.prompt('請輸入新關鍵字', '');
-		if (new_keyword !== null || new_keyword !== "") {
+		if (new_keyword !== null && new_keyword !== "") {
 			var new_note = window.prompt('請為新關鍵字輸入新的筆記(可以留空表示建立此關鍵字但無筆記)', '');
 
 			if (new_note !== null) {
