@@ -43,6 +43,13 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 ![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/using_clip2.png)
 
+### 更新
+1. 在 chrome 右上角找到 **擴充功能(圖標為🧩)** 並點選
+2. 點下擴充功能，名稱為 **竄改猴** 或 **Tampermonky**
+3. 進入 Tampermonky 的控制台(會新開分頁)
+4. 進到 **匯入匯出工具**
+7. 找到 **匯入** 並選擇檔案 **Keyword Dictionary Notes.user.js**
+8. 點下 **更新** 完成插件更新
 
 ## 🈲 如何手動屏蔽出現錯誤的網站
 
