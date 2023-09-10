@@ -20,15 +20,20 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 > 到網頁左上角找到 **一半露出來的圓形圖示** 並點擊彈出的功能欄
 
+![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_manual_img/0-0-0.png)![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_manual_img/0-0-1.png)
 ### 簡易關鍵字懸浮視窗
 
 > 將滑鼠移到在網頁中被標記起來的關鍵字，懸停並等待幾秒所彈出的懸浮視窗
+
+![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_manual_img/0-1-0.png)
 
 ### 詳細關鍵字視窗
 
 > 1.開啟側邊欄在搜尋框輸入其關鍵字名稱並按下enter後所彈出的視窗
 
 > 2.在簡易關鍵字懸浮視窗並按下 `顯示所有筆記` 按鈕後所彈出的視窗
+
+![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_manual_img/0-2-0.png)
 
 ## 📥 基礎功能
 
