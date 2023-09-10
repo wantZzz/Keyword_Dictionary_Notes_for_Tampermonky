@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Keyword Dictionary Notes
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      v0.1-beta.2
 // @description  Just highlight keyword in webpage and show up / write down your note about this keyword.
 // @author       WannaZzz
 // @match        https://*
@@ -14,6 +14,7 @@
 // @grant 		 GM_getValue
 // @grant 		 GM_deleteValue
 // @grant 		 GM_addStyle
+// @noframes
 // ==/UserScript==
 
 (function() {
@@ -22,6 +23,7 @@
 	var is_keywordPositions = false;// 是否開啟紀錄關鍵字位置
     var keywordPositions = {};// 用於紀錄關鍵字-位置的空字典
 	var keywordsToSearch = [];// 已記錄的關鍵字清單
+	var keyword_reserved_words = ['keywordsNote_priority', 'keywordsToSearch', 'keywordsSetting', 'AutoTriggerUrl'];
 
 	var popup_keyword = '';
 	var popup_keyword_note_showup_id = 0;
@@ -34,8 +36,33 @@
 
 	var window_keyword = '';
 	var window_is_needrefresh = true;
+	var is_editing_id = null;
 
 	function set_up(){
+		var keywordsToSearch_set = GM_getValue("keywordsToSearch", null);
+		if(keywordsToSearch_set == null){
+			keywordsToSearch_set = [["这是一个圆角矩形。 \n它的高度会随着文本内容而变化，但上下边距保持8px。","test",false],["我好想睡覺，我的夢想是攀登枕頭山山峰","2023/9/9 10:20:36",false],["早安","2023/9/1 14:3:23",false]];
+			GM_setValue("keywordsToSearch", keywordsToSearch_set);
+		}
+
+		var keywordsNote_priority_set = GM_getValue("keywordsNote_priority", null);
+		if(keywordsNote_priority_set == null){
+			keywordsNote_priority_set = {"標籤": 1};
+			GM_setValue("keywordsNote_priority", keywordsNote_priority_set);
+		}
+
+		var keywordsSetting_set = GM_getValue("keywordsSetting", null);
+		if(keywordsSetting_set == null){
+			keywordsSetting_set = {"init_darkmode": false,"keywordspancss": "{\n\n}"};
+			GM_setValue("keywordsSetting", keywordsSetting_set);
+		}
+
+		var AutoTriggerUrl_set = GM_getValue("AutoTriggerUrl", null);
+		if(AutoTriggerUrl_set == null){
+			AutoTriggerUrl_set = [];
+			GM_setValue("AutoTriggerUrl", AutoTriggerUrl_set);
+		}
+
 		keywordsToSearch = GM_getValue("keywordsToSearch", null);
 	}
 
@@ -57,8 +84,99 @@
 		}
 	}
 
+	function isin_autostartup_list(){
+		const domain = window.location.host;
+
+		const AutoTriggerUrl = GM_getValue("AutoTriggerUrl", null);
+		if(AutoTriggerUrl.indexOf(domain) >= 0){
+			return true
+		}else{
+			return false
+		}
+	}
+
+	function addin_autostartup_list(){
+		try{
+			const domain = window.location.host;
+
+			var AutoTriggerUrl = GM_getValue("AutoTriggerUrl", null);
+
+			AutoTriggerUrl.push(domain);
+
+			GM_setValue("AutoTriggerUrl", AutoTriggerUrl);
+
+			trigger_alert_window("已開啟自動尋找在該網域", 'ok');
+			return true
+		}catch(e){
+			trigger_alert_window("無法開啟自動尋找在該網域 錯誤:" + e.name, 'error');
+			console.log(e);
+
+			return false
+		}
+	}
+
+	function removeout_autostartup_list(){
+		try{
+			const domain = window.location.host;
+
+			var AutoTriggerUrl = GM_getValue("AutoTriggerUrl", null);
+
+			const index = AutoTriggerUrl.indexOf(domain);
+			if (index > -1) {
+			  AutoTriggerUrl.splice(index, 1);
+			}
+
+			GM_setValue("AutoTriggerUrl", AutoTriggerUrl);
+
+			trigger_alert_window("已關閉自動尋找在該網域", 'ok');
+			return true
+		}catch(e){
+			trigger_alert_window("無法關閉自動尋找在該網域 錯誤:" + e.name, 'error');
+			console.log(e);
+
+			return false
+		}
+	}
+
+	function quest_init_setting(setting_name){
+		const keywordsSetting = GM_getValue("keywordsSetting", null);
+		if(keywordsSetting[setting_name]){
+			return keywordsSetting[setting_name]
+		}else{
+			return null
+		}
+	}
+
+	function setting_init_setting(setting_name, value){
+		try{
+			var keywordsSetting = GM_getValue("keywordsSetting", null);
+
+			keywordsSetting[setting_name] = value;
+
+			GM_setValue("keywordsSetting", keywordsSetting);
+
+			trigger_alert_window("設定成功", 'ok');
+			return true
+		}catch(e){
+			trigger_alert_window("設定失效 錯誤:" + e.name, 'error');
+			console.log(e);
+
+			return false
+		}
+	}
+
 	function add_newkeyword(new_keyword, note){
 		var is_StoreKeywordData = false;
+
+		if(keyword_reserved_words.indexOf(new_keyword) >= 0){
+			trigger_alert_window("這個關鍵字為系統保留字，無法新增", 'error');
+			return false
+		}
+
+		if(keywordsToSearch.indexOf(new_keyword) >= 0){
+			trigger_alert_window("該關鍵字已存在", 'error');
+			return false
+		}
 
 		try{
 			var new_datetime = datetime_output_format();
@@ -78,10 +196,11 @@
 			GM_setValue("keywordsToSearch", keywordsToSearch_copy);
 
 			keywordsToSearch = keywordsToSearch_copy;
+			trigger_alert_window(`新關鍵字 ${new_keyword} 已儲存`, 'ok');
 
 			return true
 		}catch(e){
-			alert("無法儲存新關鍵字 錯誤:" + e.name);
+			trigger_alert_window("無法儲存新關鍵字 錯誤:" + e.name, 'error');
 			console.log(e);
 
 			if(is_StoreKeywordData){
@@ -108,10 +227,11 @@
 			GM_deleteValue(keyword);
 
 			keywordsToSearch = keywordsToSearch_copy;
+			trigger_alert_window(`關鍵字 ${keyword} 已刪除`, 'ok');
 
 			return true
 		}catch(e){
-			alert("無法刪除新關鍵字 錯誤:" + e.name);
+			trigger_alert_window("無法刪除新關鍵字 錯誤:" + e.name, 'error');
 			console.log(e);
 
 			if(is_KeywordNotInList){
@@ -123,12 +243,22 @@
 	}
 
 	function edit_keyword(new_keyword, old_keyword){
+		if(keyword_reserved_words.indexOf(new_keyword) >= 0){
+			trigger_alert_window("這個關鍵字為系統保留字，無法新增", 'error');
+			return false
+		}
+
+		if(keywordsToSearch.indexOf(new_keyword) >= 0){
+			trigger_alert_window("該關鍵字已存在", 'error');
+			return false
+		}
+
 		var is_StoreNewKeywordData = false;
 		var is_DeleteOldKeywordData = false;
 
 		const old_Keyword_data = GM_getValue(old_keyword, null);
 		if(old_Keyword_data === null){
-			alert("無法編輯新關鍵字 錯誤: Old keyword does not exist");
+			trigger_alert_window("無法編輯新關鍵字 錯誤: Old keyword does not exist", 'error');
 			console.log("GM_getValue(keyword, null) === null --> error: Old keyword does not exist");
 			return
 		}
@@ -149,10 +279,11 @@
 			GM_setValue("keywordsToSearch", keywordsToSearch_copy);
 
 			keywordsToSearch = keywordsToSearch_copy;
+			trigger_alert_window(`關鍵字 ${old_keyword} 已變更為 ${new_keyword}`, 'ok');
 
 			return true
 		}catch(e){
-			alert("無法編輯新關鍵字 錯誤:" + e.name);
+			trigger_alert_window("無法編輯新關鍵字 錯誤:" + e.name, 'error');
 			console.log(e);
 
 			if(is_StoreNewKeywordData){
@@ -169,7 +300,7 @@
 	function add_keyword_note(keyword, note){
 		var keyword_data = GM_getValue(keyword, null);
 		if(keyword_data === null){
-			alert("無法儲存新筆記 錯誤: keyword does not exist");
+			trigger_alert_window("無法儲存新筆記 錯誤: keyword does not exist", 'error');
 			console.log("GM_getValue(keyword, null) === null --> error: keyword does not exist");
 			return false
 		}
@@ -182,10 +313,11 @@
 			new_keyword_data.push([note, new_datetime, false]);
 
 			GM_setValue(keyword, new_keyword_data);
+			trigger_alert_window(`新筆記已儲存`, 'ok');
 
 			return true
 		}catch(e){
-			alert("無法儲存新筆記 錯誤:" + e.name);
+			trigger_alert_window("無法儲存新筆記 錯誤:" + e.name, 'error');
 			console.log(e);
 
 			return false
@@ -195,7 +327,7 @@
 	function delete_keyword_note(keyword, keyword_data_id){
 		var keyword_data = GM_getValue(keyword, null);
 		if(keyword_data === null){
-			alert("無法刪除該筆記 錯誤: Old keyword does not exist");
+			trigger_alert_window("無法刪除該筆記 錯誤: Old keyword does not exist", 'error');
 			console.log("GM_getValue(keyword, null) === null --> error: Old keyword does not exist");
 			return false
 		}
@@ -206,10 +338,11 @@
 			new_keyword_data.splice(keyword_data_id, 1);
 
 			GM_setValue(keyword, new_keyword_data);
+			trigger_alert_window(`筆記已刪除`, 'ok');
 
 			return true
 		}catch(e){
-			alert("無法刪除該筆記 錯誤:" + e.name)
+			trigger_alert_window("無法刪除該筆記 錯誤:" + e.name, 'error');
 			console.log(e)
 
 			return false
@@ -219,7 +352,7 @@
 	function edit_keyword_note(keyword, note, keyword_data_id){
 		var keyword_data = GM_getValue(keyword, null);
 		if(keyword_data === null){
-			alert("無法編輯該筆記 錯誤: Old keyword does not exist");
+			trigger_alert_window("無法編輯該筆記 錯誤: Old keyword does not exist", 'error');
 			console.log("GM_getValue(keyword, null) === null --> error: Old keyword does not exist");
 			return false
 		}
@@ -232,10 +365,11 @@
             new_keyword_data[keyword_data_id][1] = new_datetime;
 
 			GM_setValue(keyword, new_keyword_data);
+			trigger_alert_window('編輯內容已儲存', 'ok');
 
 			return true
 		}catch(e){
-			alert("無法編輯該筆記 錯誤:" + e.name)
+			trigger_alert_window("無法編輯該筆記 錯誤:" + e.name, 'error');
 			console.log(e)
 
 			return false
@@ -364,7 +498,7 @@
                     popup.style.animation = "fade 0.5s linear";
 
                     const mouseX = event.clientX + 10;
-                    const mouseY = event.clientY + 10;
+                    const mouseY = event.clientY + 10 + window.scrollY;
 
                     popup.style.left = mouseX + "px";
                     popup.style.top = mouseY + "px";
@@ -393,6 +527,8 @@
 	function searchPageForKeywords() {
 		var body = document.body;
 		highlightKeyword(body);
+
+		trigger_alert_window('網頁關鍵字內容已標記', 'ok');
 	}
 
 	function datetime_output_format(){
@@ -513,15 +649,17 @@
         });
 
 		// 設定側邊功能欄按紐事件
+		const overlay = document.getElementById('overlay');
+
 		document.getElementById("sidebar-new-keword-button").addEventListener (
 			"click", sidebar_new_keword_button_click, false
 		);
 		document.getElementById("sidebar-refresh-button").addEventListener (
 			"click", sidebar_reload_button_click, false
 		);
-		document.getElementById("sidebar-setting-button").addEventListener (
-			"click", sidebar_setting_button_click, false
-		);
+		document.getElementById("sidebar-setting-button").addEventListener('click', () => {
+			overlay.style.display = 'flex';
+		});
 		document.getElementById("sidebar-export-notes-button").addEventListener (
 			"click", sidebar_export_notes_button_click, false
 		);
@@ -529,8 +667,84 @@
 			"click", sidebar_inport_notes_button_click, false
 		);
 
+		// 設定模式時點擊界面以外處隱藏設定界面
+		overlay.addEventListener('click', (event) => {
+			if (event.target === overlay) {
+				overlay.style.display = 'none';
+			}
+		});
+
 		// 設定側邊輸入框按紐與輸入事件
 		autocomplete(document.getElementById("keyword-search-input"), keywordsToSearch);
+
+		// 載入設定彈窗
+		const IsAutoHead = keywordnote.querySelector(".k-is-auto");
+		const IsAutoSwitch = keywordnote.querySelector(".toggle-switch-on");
+        const IsAutoText = keywordnote.querySelector(".isauto-text-start");
+
+		const InitModeHead = keywordnote.querySelector(".k-init-mode");
+		const InitModeSwitch = keywordnote.querySelector(".toggle-switch-initmode");
+        const InitModeText = keywordnote.querySelector(".initmode-text-start");
+
+		if(isin_autostartup_list()){
+			keywordnote.querySelector(".isauto-text-start").innerText = '此網域 "自動" 尋找關鍵字';
+			keywordnote.querySelector(".k-is-auto").classList.toggle("on");
+
+			keywordnote.querySelector(".mode-text-start").innerText = 'Hide mark';
+			keywordnote.querySelector(".start-up").classList.toggle("on");
+
+			searchPageForKeywords();
+
+			setting_keyword_eventlistener();
+		}
+
+		if(quest_init_setting('init_darkmode')){
+			keywordnote.querySelector(".initmode-text-start").innerText = '初始 "黑暗" 模式';
+			keywordnote.querySelector(".k-init-mode").classList.toggle("on");
+
+			document.querySelector('keywordnote').classList.toggle("dark");
+			keywordnote.querySelector(".mode-text").innerText = "Dark mode";
+		}
+
+		const spancss = quest_init_setting('keywordspancss');
+		if(spancss != "" || spancss != null){
+			document.getElementById("keyword-setting-css-input-box").value = spancss;
+			GM_addStyle(`span.highlight-keyword${spancss}`);
+			console.log(`span.highlight-keyword${spancss}`);
+		}
+
+		// 設定彈窗滑桿與按鈕事件
+		IsAutoSwitch.addEventListener("click", () => {
+            IsAutoHead.classList.toggle("on");
+
+			if (IsAutoHead.classList.contains("on")) {
+                IsAutoText.innerText = '此網域 "自動" 尋找關鍵字';
+
+				addin_autostartup_list();
+            } else {
+                IsAutoText.innerText = '此網域 "手動" 尋找關鍵字';
+
+				removeout_autostartup_list();
+            }
+        });
+
+		InitModeSwitch.addEventListener("click", () => {
+            InitModeHead.classList.toggle("on");
+
+			if (InitModeHead.classList.contains("on")) {
+                InitModeText.innerText = '初始 "黑暗" 模式';
+
+				setting_init_setting('init_darkmode', true);
+            } else {
+                InitModeText.innerText = '初始 "明亮" 模式';
+
+				setting_init_setting('init_darkmode', false);
+            }
+        });
+
+		document.getElementById("keyword-setting-css-save-button").addEventListener (
+			"click", setting_keyword_css_click, false
+		);
 
 		// 設定詳細關鍵字視窗標題按紐事件
 		document.getElementById("windos-close-button").addEventListener (
@@ -579,12 +793,11 @@
 
 	//簡易關鍵字懸浮視窗 函式
 	function keyword_note_show_all_click() {
-		//alert("此功能暫未開放");
         trigger_detailed_note(popup_keyword);
 	}
 
 	function keyword_unknow_function_click() {
-		alert("此功能暫未開放");
+		trigger_alert_window("此功能暫未開放", 'warning');
 	}
 
 	function keyword_delete_data_click() {
@@ -595,7 +808,7 @@
 				remove_delete_keyword_span(popup_keyword);
 
 				close_popup();
-				alert("該關鍵字與其相關筆記已刪除");
+				trigger_alert_window("該關鍵字與其相關筆記已刪除", 'ok');
 			}
 		} else {
 			return
@@ -647,6 +860,16 @@
 	function sidebar_new_keword_button_click(){
 		var new_keyword = window.prompt('請輸入新關鍵字', '');
 		if (new_keyword !== null && new_keyword !== "") {
+			if(keywordsToSearch.indexOf(new_keyword) >= 0){
+				trigger_alert_window("該關鍵字已存在", 'error');
+				return
+			}
+
+			if(keyword_reserved_words.indexOf(new_keyword) >= 0){
+				trigger_alert_window("這個關鍵字為系統保留字，無法新增", 'error');
+				return
+			}
+
 			var new_note = window.prompt('請為新關鍵字輸入新的筆記(可以留空表示建立此關鍵字但無筆記)', '');
 
 			if (new_note !== null) {
@@ -656,7 +879,7 @@
 			}
 
 		}else if(new_keyword === ""){
-			alert("關鍵字不可為空!");
+			trigger_alert_window("關鍵字不可為空!", 'warning');
 		}else{
 			return
 		}
@@ -673,15 +896,15 @@
 	}
 
 	function sidebar_setting_button_click(){
-		alert("此功能暫未開放");
+		trigger_alert_window("此功能暫未開放", 'warning');
 	}
 
 	function sidebar_export_notes_button_click(){
-		alert("此功能暫未開放");
+		trigger_alert_window("此功能暫未開放", 'warning');
 	}
 
 	function sidebar_inport_notes_button_click(){
-		alert("此功能暫未開放");
+		trigger_alert_window("此功能暫未開放", 'warning');
 	}
 
 	function keyword_search_input_click(keyword_search_input){
@@ -689,7 +912,7 @@
 			trigger_detailed_note(keyword_search_input);
 			return true
 		}else{
-			alert('這個關鍵字不存在');
+			trigger_alert_window('這個關鍵字不存在', 'warning');
 			return false
 		}
 	}
@@ -805,14 +1028,14 @@
 
 	//詳細關鍵字視窗 函式
 	function trigger_detailed_note(keyword){
+		if(keyword === ""){
+			trigger_alert_window('沒有預選關鍵字，是不能打開視窗的\n(請先將滑鼠滑到畫面的關鍵字並在跳出的視窗選"顯示所有筆記")', 'warning');
+			return
+		}
+
 		var keyword_data = get_keyword_data(keyword);
 		var priority_id = get_note_priority(keyword);
         var container = document.getElementById("windos-container");
-
-		if(keyword === ""){
-			alert('沒有預選關鍵字，是不能打開視窗的 (請先將滑鼠滑到畫面的關鍵字並在跳出的視窗選"顯示所有筆記")');
-			return
-		}
 
 		if(window_is_needrefresh || !(keyword === window_keyword)){
 			var message_container = document.getElementById("windos-message-container");
@@ -866,8 +1089,8 @@
 					if(!message_blocks[count_id]){
 						var message_block = document.createElement('div');
 						message_block.className = 'windos-message-block';
-						note_content = note_content.replace(/\r\n/g,"<br>");
-						note_content = note_content.replace(/\n/g,"<br>");
+						note_content = note_content.replace(/\r\n/g, "<br />");
+						note_content = note_content.replace(/\n/g, "<br />");
 
 						message_block.innerHTML = `<div class="windos-message-box">
 														<div class="windos-message-content">
@@ -892,10 +1115,10 @@
 						message_container.appendChild(message_block);
 					}else{
 						var exist_block = message_blocks[count_id];
-						note_content = note_content.replace(/\r\n/g,"<br>");
-						note_content = note_content.replace(/\n/g,"<br>");
+						note_content = note_content.replace(/\r\n/g, "<br />");
+						note_content = note_content.replace(/\n/g, "<br />");
 
-						exist_block.querySelector(".windos-message-content").innerText = note_content;
+						exist_block.querySelector(".windos-message-content").innerHTML = note_content;
 						exist_block.querySelector(".windos-message-timestamp").innerText = note_data[1];
 					}
 
@@ -916,7 +1139,7 @@
 		}
 		var kewword_sidebar = document.getElementById("kewword_sidebar");
 
-		container.style.top = '10px';
+		container.style.top = `${10 + window.scrollY}px`;
         if(getComputedStyle(kewword_sidebar).boxShadow === 'none'){
             container.style.left = '10px';
         }else{
@@ -931,14 +1154,66 @@
 	function windos_message_edit_button_click(trigger_element_data){
 		var note_id = trigger_element_data.target.getAttribute('note_id');
 
-		alert(`此功能暫未開放，but button trigger and note_id is ${note_id}`);
+		//trigger_alert_window(`此功能暫未開放，but button trigger and note_id is ${note_id}`, 'warning');
+
+		if(note_id == '-1'){
+			trigger_alert_window("不存在的筆記不能編輯，因為它只是提示 (你不能編輯提示)", 'warning');
+			return
+		}
+
+		if(is_editing_id == null){
+			const windos_message_block = trigger_element_data.target.parentNode.parentNode.parentNode
+
+			const windos_message_content = windos_message_block.querySelector('.windos-message-content');
+			const windos_message_box = windos_message_block.querySelector('.windos-message-box');
+
+			var message_block_edit = document.createElement('textarea');
+			message_block_edit.className = 'windos-input-element';
+			message_block_edit.value = windos_message_content.innerText.replace("<br />", /\n/g);;
+			message_block_edit.setAttribute('type','text');
+
+			windos_message_box.replaceWith(message_block_edit);
+			is_editing_id = note_id;
+
+		}else if(is_editing_id == note_id){
+			const windos_message_block = trigger_element_data.target.parentNode.parentNode.parentNode
+
+			const message_block_edit = windos_message_block.querySelector('.windos-input-element');
+
+			edit_keyword_note(window_keyword, message_block_edit.value, note_id)
+
+			var keyword_data = get_keyword_data(window_keyword);
+			var note_content = keyword_data[note_id][0];
+
+			note_content = note_content.replace(/\r\n/g, "<br />");
+			note_content = note_content.replace(/\n/g, "<br />");
+
+			var windos_message_box = document.createElement('div');
+			windos_message_box.className = 'windos-message-box';
+
+			windos_message_box.innerHTML = `<div class="windos-message-content">
+												${note_content}
+											</div>`;
+
+			message_block_edit.replaceWith(windos_message_box);
+			is_editing_id = null;
+
+		}else{
+			trigger_alert_window("你不能在編輯筆記中又編輯其他筆記", 'warning');
+			return
+		}
 	}
 
 	function windos_message_delete_button_click(trigger_element_data){
 		var note_id = trigger_element_data.target.getAttribute('note_id');
 
+		if(is_editing_id != null){
+			trigger_alert_window('你還在編輯筆記中，不能刪除任何筆記', 'warning');
+			return
+		}
+
 		if(note_id < 0){
-			alert("不存在的筆記不須刪除，因為它本來就不存在 (你不能刪除提示)");
+			trigger_alert_window("不存在的筆記不須刪除，因為它本來就不存在 (你不能刪除提示)", 'warning');
 			return
 		}
 
@@ -947,7 +1222,9 @@
 		if (result === true) {
 			if(delete_keyword_note(window_keyword, note_id)){
 				window_is_needrefresh = true;
-				alert("該筆記已刪除");
+				trigger_alert_window("該筆記已刪除", 'ok');
+
+				trigger_detailed_note(window_keyword);
 			}
 		} else {
 			return
@@ -955,10 +1232,34 @@
 	}
 
 	function keyword_note_title_edit_click(){
-		alert("此功能暫未開放");
+		trigger_alert_window("此功能暫未開放", 'warning');
+
+		if(is_editing_id != null){
+			trigger_alert_window('你還在編輯筆記中，不能編輯任何關鍵字', 'warning');
+			return
+		}
+
+		var new_keyword = window.prompt('請輸入新關鍵字', '');
+		if (new_keyword !== null && new_keyword !== "") {
+			if(edit_keyword(new_keyword, window_keyword)){
+				window_is_needrefresh = true;
+
+				remove_delete_keyword_span(window_keyword);
+				trigger_detailed_note(new_keyword);
+			}
+		}else if(new_keyword === ""){
+			trigger_alert_window("關鍵字不可為空!", 'warning');
+		}else{
+			return
+		}
 	}
 
 	function keyword_note_title_delete_click(){
+		if(is_editing_id != null){
+			trigger_alert_window('你還在編輯筆記中，不能刪除任何關鍵字', 'warning');
+			return
+		}
+
 		var result = confirm("刪除後該關鍵字與其相關筆記是無法找回的，你是否要刪除該關鍵字?");
 
 		if (result === true) {
@@ -966,7 +1267,7 @@
 				remove_delete_keyword_span(window_keyword);
 
 				colse_windos();
-				alert("該關鍵字與其相關筆記已刪除");
+				trigger_alert_window("該關鍵字與其相關筆記已刪除", 'ok');
 			}
 		} else {
 			return
@@ -974,6 +1275,11 @@
 	}
 
 	function windos_close_click(){
+		if(is_editing_id != null){
+			trigger_alert_window('你還在編輯筆記中，請回去儲存筆記以免損失進度', 'warning');
+			return
+		}
+
 		var container = document.getElementById("windos-container");
 
 		container.style.opacity = 0;
@@ -992,6 +1298,50 @@
 		windos.style.zIndex = -5;
 		windos.style.opacity = 0;
 		window_keyword = "";
+	}
+
+	//警報彈窗 函式
+	function trigger_alert_window(message, type){
+		const alertContainer = document.getElementById('keyword-alertContainer');
+		var message_copy = message;
+
+		alertContainer.classList.add('keyword-alert-show');
+
+		message_copy = message_copy.replace(/\r\n/g,"<br>");
+		message_copy = message_copy.replace(/\n/g,"<br>");
+		document.getElementById('keyword-alertMessage').innerHTML = message_copy;
+		const alertSign = document.getElementById('keyword-alertSign')
+
+		switch (type) {
+			case 'error':
+				alertContainer.style.backgroundColor =  '#EA0000';
+				alertSign.innerText = '✖';
+				break;
+
+			case 'warning':
+				alertContainer.style.backgroundColor =  '#FFD306';
+				alertSign.innerText = '!';
+				break;
+
+			case 'ok':
+				alertContainer.style.backgroundColor =  '#00A600';
+				alertSign.innerText = '✔';
+				break;
+
+			default:
+				return
+		}
+
+		setTimeout(() => {
+			alertContainer.classList.remove('keyword-alert-show');
+		}, 3000);
+	}
+
+	//設定彈窗 函式
+	function setting_keyword_css_click(){
+		var input_box = document.getElementById("keyword-setting-css-input-box");
+
+		setting_init_setting('keywordspancss', input_box.value);
 	}
 
 	//插入可視元素與樣式到網頁上 函式
@@ -1078,7 +1428,7 @@
 										</nav>\
 										<div class="popup" id="popup">\
 											<h1 id="keyword_title">某個關鍵字</h1>\
-											<div class="button-container">\
+											<div class="keyword-button-container">\
 												<button id="keyword_note_show_all" class="button">顯示所有筆記</button>\
 												<button id="keyword_unknow_function" class="button">隱藏本關鍵字</button>\
 												<button id="keyword_delete_data" class="button">刪除本關鍵字</button>\
@@ -1106,12 +1456,226 @@
 												<div class="windos-message-container" id="windos-message-container">\
 												</div>\
 											</div>\
+										</div>\
+										<div id="keyword-alertContainer">\
+											<i id="keyword-alertSign" class="keyword-alert-exclamation">!</i>\
+											<div id="keyword-alertMessage">\
+												此功能暫未開放\
+											</div>\
+										</div>\
+										<div class="keyword-overlay" id="overlay">\
+											<div class="keyword-settings-container">\
+												<h2>設定</h2>\
+												<li class="k-is-auto">\
+													<span class="isauto-text-start keyword-text-setting">此網域 "手動" 尋找關鍵字</span>\
+													<div class="toggle-switch-on">\
+														<span class="switch-on"></span>\
+													</div>\
+												</li>\
+												<li class="k-init-mode">\
+													<span class="initmode-text-start keyword-text-setting">初始 "明亮" 模式</span>\
+													<div class="toggle-switch-initmode">\
+														<span class="switch-initmode"></span>\
+													</div>\
+												</li>\
+												<div class="k-span-style">\
+													<div class="k-span-style-box">\
+														<span class="keyword-text-setting">關鍵字css樣式</span>\
+														<textarea id="keyword-setting-css-input-box" rows="4" class="input-box" placeholder="在此輸入關鍵字css樣式"></textarea>\
+													</div>\
+													<div style="display: flex;justify-content: flex-end;">\
+														<button id="keyword-setting-css-save-button" class="save-button">儲存</button>\
+													</div>\
+												</div>\
+											</div>\
 										</div>';
 
         document.body.appendChild(keyword_container);
 	}
 
 	function keyword_insert_css(){
+		//設定彈窗
+		GM_addStyle('keywordnote .keyword-overlay {\
+						display: none;\
+						position: fixed;\
+						top: 0;\
+						left: 0;\
+						width: 100%;\
+						height: 100%;\
+						background-color: rgba(0, 0, 0, 0.5);\
+						align-items: center;\
+						justify-content: center;\
+						transition: var(--tran-03);\
+						z-index: 15000;\
+					}\
+					keywordnote .keyword-settings-container {\
+						background-color: var(--sidebar-color);\
+						color: var(--text-color);\
+						transition: var(--tran-05);\
+						border-radius: 6px;\
+						padding: 20px;\
+						width: 350px;\
+						text-align: center;\
+					}\
+					keywordnote .save-button {\
+						list-style: none;\
+						background-color: transparent;\
+						display: flex;\
+						align-items: center;\
+						border-radius: 6px;\
+						text-decoration: none;\
+						transition: var(--tran-03);\
+						border: none;\
+						width: 50px;\
+						position: relative;\
+						margin-bottom: 12px;\
+						margin-right: 15px;\
+						justify-content: center;\
+					}\
+					keywordnote .save-button:hover{\
+						background-color: var(--primary-color-light-popup);\
+						color: var(--primary-text-light-popup);\
+					}\
+					keywordnote .keyword-settings-container li{\
+						height: 50px;\
+						list-style: none;\
+						display: flex;\
+						align-items: center;\
+						margin-top: 10px;\
+					}\
+					keywordnote .keyword-settings-container .k-is-auto,\
+					keywordnote .keyword-settings-container .k-init-mode{\
+						border-radius: 6px;\
+						background-color: var(--primary-color-light);\
+						position: relative;\
+						transition: var(--tran-05);\
+						padding: 0 15px;\
+					}\
+					keywordnote .keyword-settings-container .k-span-style {\
+						display: flex;\
+						border-radius: 6px;\
+						background-color: var(--primary-color-light);\
+						position: relative;\
+						transition: var(--tran-05);\
+						margin-top: 10px;\
+						flex-direction: column;\
+					}\
+					keywordnote .keyword-settings-container .k-span-style-box{\
+						display: flex;\
+						flex-direction: column;\
+						align-items: flex-start;\
+						padding: 9px 15px;\
+					}\
+					keywordnote .keyword-settings-container .toggle-switch-on,\
+					keywordnote .keyword-settings-container .toggle-switch-initmode{\
+						position: absolute;\
+						right: 0;\
+						height: 100%;\
+						min-width: 60px;\
+						display: flex;\
+						align-items: center;\
+						justify-content: center;\
+						border-radius: 6px;\
+						cursor: pointer;\
+					}\
+					keywordnote .keyword-settings-container .switch-on,\
+					keywordnote .keyword-settings-container .switch-initmode{\
+						position: relative;\
+						height: 22px;\
+						width: 40px;\
+						border-radius: 25px;\
+						background-color: var(--toggle-color);\
+						transition: var(--tran-05);\
+					}\
+					keywordnote .keyword-settings-container .switch-on::before,\
+					keywordnote .keyword-settings-container .switch-initmode::before{\
+						content: "";\
+						position: absolute;\
+						height: 15px;\
+						width: 15px;\
+						border-radius: 50%;\
+						top: 50%;\
+						left: 5px;\
+						transform: translateY(-50%);\
+						background-color: var(--sidebar-color);\
+						transition: var(--tran-04);\
+					}\
+					keywordnote .keyword-settings-container .k-is-auto.on .switch-on::before,\
+					keywordnote .keyword-settings-container .k-init-mode.on .switch-initmode::before{\
+						left: 20px;\
+					}\
+					keywordnote .keyword-settings-container .keyword-text-setting{\
+						font-size: 17px;\
+						font-weight: 500;\
+						white-space: nowrap;\
+						opacity: 1;\
+					}\
+					keywordnote .keyword-settings-container .keyword-text-setting{\
+						color: var(--text-color);\
+						transition: var(--tran-03);\
+					}\
+					keywordnote .keyword-settings-container .input-box{\
+						height: 200px;\
+						resize: vertical;\
+						margin-top: 5px;\
+						max-height: 360px;\
+						min-height: 100px;\
+						width: 100%;\
+						border-radius: 6px;\
+						padding: 8px;\
+						font-size: 15px;\
+						box-sizing: border-box;\
+						background-color: var(--primary-color-light);\
+						color: var(--text-color);\
+						border: 1px solid #ccc;\
+					}\
+					keywordnote h2{\
+						display: block;\
+						font-size: 25px;\
+						margin-block-start: 0.83em;\
+						margin-block-end: 0.83em;\
+						margin-inline-start: 0px;\
+						margin-inline-end: 0px;\
+						font-weight: bold;\
+					}');
+
+		//警報彈窗
+		GM_addStyle('keywordnote .keyword-alert-show {\
+						right: 0 !important; /* 弹出到右上角 */\
+						opacity: 1 !important; /* 可见 */\
+					}\
+					keywordnote .keyword-alert-exclamation {\
+						font-size: 25px;\
+						color: white;\
+						font-family: sans-serif;\
+						font-style: normal;\
+						padding: 2.5px 20px 2.5px 0;\
+						font-weight: bold;\
+					}\
+					keywordnote #keyword-alertContainer {\
+						display: flex;\
+						position: fixed;\
+						top: 20px;\
+						right: -300px;\
+						background-color: #00A600;\
+						padding: 5px 0px 3px 20px;\
+						box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);\
+						transition: right 0.5s ease-in-out, opacity 0.5s ease-in-out;\
+						opacity: 0;\
+						flex-direction: row;\
+						align-items: flex-start;\
+						z-index: 10600;\
+					}\
+					keywordnote #keyword-alertMessage {\
+						background-color: #FFFFFF;\
+						padding: 10px;\
+						height: 100%;\
+						font-family: "Poppins", sans-serif;\
+						color: #707070;\
+						font-weight: bold;\
+					}');
+
+		//側邊功能欄建議輸入
 		GM_addStyle('.autocomplete-items {\
 						position: absolute;\
 						border: 1px solid #d4d4d4;\
@@ -1140,6 +1704,7 @@
 						color: #ffffff; \
 					}');
 
+		//簡易關鍵字懸浮視窗
 		GM_addStyle('@keyframes fade {from {opacity: 0;}to {opacity: 1;}}\
 					@keyframes fadeOut {from {opacity: 1;}to {opacity: 0;}}\
 					keywordnote .popup {\
@@ -1160,7 +1725,7 @@
 						margin-bottom: 10px;\
 					}\
 					/* 三個並排的按鈕樣式 */\
-					keywordnote .popup .button-container {\
+					keywordnote .popup .keyword-button-container {\
 						display: flex;\
 						justify-content: space-between;\
 						margin-bottom: 16px; /* 與下方圓角矩形保持間距 */\
@@ -1210,6 +1775,7 @@
 					}\
 		');
 
+		//側邊功能欄
 		GM_addStyle('keywordnote .bx-chevron-right:before {\
 						content:">"\
 					}\
@@ -1559,6 +2125,7 @@
 					}\
 		');
 
+		//詳細關鍵字視窗
 		GM_addStyle('keywordnote .windos-container {\
 						opacity: 0;\
 						margin: 10px;\
@@ -1588,6 +2155,20 @@
 						border-radius: 10px;\
 						background-color: var(--primary-color-light);\
 						transition: var(--tran-05);\
+					}\
+					keywordnote .windos-input-element {\
+						font-size: 15px;\
+						box-sizing: border-box;\
+						background-color: var(--primary-color-light);\
+						color: var(--text-color);\
+						margin-top: 10px;\
+						padding: 8px;\
+						border-radius: 10px;\
+						resize: vertical;\
+						overflow: hidden;\
+						border: 1px solid #ccc;\
+						padding: 8px;\
+						width: 100%;\
 					}\
 					\
 					keywordnote .windos-message-titlebar {\
