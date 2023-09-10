@@ -29,9 +29,9 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 ### 詳細關鍵字視窗
 
-> 1.開啟側邊欄在搜尋框輸入其關鍵字名稱並按下enter後所彈出的視窗
+> 方法1.開啟側邊欄在搜尋框輸入其關鍵字名稱並按下enter後所彈出的視窗
 
-> 2.在簡易關鍵字懸浮視窗並按下 `顯示所有筆記` 按鈕後所彈出的視窗
+> 方法2.在簡易關鍵字懸浮視窗並按下 `顯示所有筆記` 按鈕後所彈出的視窗
 
 ![image](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/github_manual_img/0-2-0.png)
 
@@ -47,9 +47,9 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 ### 刪除關鍵字
 
-> 1.在詳細關鍵字視窗點下 `🗑️` 即可
+> 方法1.在詳細關鍵字視窗點下 `🗑️` 即可
 
-> 2.在簡易關鍵字並按下 `刪除本關鍵字` 按鈕
+> 方法2.在簡易關鍵字並按下 `刪除本關鍵字` 按鈕
 
 ### 編輯關鍵字
 
