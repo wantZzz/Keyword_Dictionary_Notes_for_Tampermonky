@@ -31,6 +31,9 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 8. 點下 **安裝** 完成插件安裝
 
 ### 使用
+
+> 詳細的使用請見手冊: [Keyword Dictionary Notes 使用手冊](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/Keyword_Dictionary_Notes_manual.md)
+
 1. 開啟任意 **http** / **https** 網頁並等待載入完成
 2. 到左上角找到 **一半露出來的圓形圖示** 並點擊
 
