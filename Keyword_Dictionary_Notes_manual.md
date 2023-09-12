@@ -65,7 +65,7 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 ### 編輯關鍵字筆記
 
-> 在詳細關鍵字視窗並找到該筆記並點下 `✏️` 即可
+> 在詳細關鍵字視窗並找到該筆記並點下 `✏️` 即可，儲存更改只需再點一次即可儲存
 
 ### 切換 明亮/黑暗 模式
 
