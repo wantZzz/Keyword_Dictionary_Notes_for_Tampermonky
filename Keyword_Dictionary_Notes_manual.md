@@ -8,7 +8,7 @@ A Tampermonky plug-in that can record notes based on keywords on various website
 **注意 | Notice :** \
 現有版本只支持繁體中文 | The current version only supports Traditional Chinese
 
-## 🔝 取得最新版本
+## 🔝 取得所有版本
 
 https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
@@ -17,7 +17,7 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 **注意! 部分網站可能會無法正常顯示插件或是被遮擋!**
 
 ## 📥 如何安裝本插件
-**你能從上一章取得最新版本並下載 `Keyword Dictionary Notes.user.js` 以供後續步驟使用**
+**你能從 [這裡](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases/latest) 取得最新版本並下載 `Keyword Dictionary Notes.user.js` 以供後續步驟使用**
 
 1. 到 [chrome 線上應用程式商店](https://chrome.google.com/webstore/category/extensions) 
 2. 搜尋 **tampermonkey** 並加到chrome
