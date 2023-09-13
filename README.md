@@ -10,9 +10,11 @@ A Tampermonky plug-in that can record notes based on keywords on various website
 **詳細的使用請見手冊 | Please refer to the manual for detailed usage:** \
 [Keyword Dictionary Notes 使用手冊](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/Keyword_Dictionary_Notes_manual.md)
 
-## 🔝 取得最新版本
+## 🔝 取得所有版本
 
 https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
+
+或者 [點我](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases/latest) 取得最新版本
 
 ## 📖 使用須知
 
@@ -24,6 +26,8 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 ## 📥 如何安裝與使用
 
 ### 安裝
+**你能從 [這裡](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases/latest) 取得最新版本並下載 `Keyword Dictionary Notes.user.js` 以供後續步驟使用**
+
 1. 到 [chrome 線上應用程式商店](https://chrome.google.com/webstore/category/extensions) 
 2. 搜尋 **tampermonkey** 並加到chrome
 3. 在 chrome 右上角找到 **擴充功能(圖標為🧩)** 並點選
