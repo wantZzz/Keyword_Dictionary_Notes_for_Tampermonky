@@ -16,6 +16,17 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 **注意! 部分網站可能會無法正常顯示插件或是被遮擋!**
 
+## 📥 如何安裝本插件
+**你能從上一章取得最新版本並下載 `Keyword Dictionary Notes.user.js` 以供後續步驟使用**
+
+1. 到 [chrome 線上應用程式商店](https://chrome.google.com/webstore/category/extensions) 
+2. 搜尋 **tampermonkey** 並加到chrome
+3. 在 chrome 右上角找到 **擴充功能(圖標為🧩)** 並點選
+4. 點下你剛下載的擴充功能，名稱為 **竄改猴** 或 **Tampermonky**
+5. 進入 Tampermonky 的控制台(會新開分頁)
+6. 進到 **匯入匯出工具**
+7. 找到 **匯入** 並選擇檔案 **Keyword Dictionary Notes.user.js**
+8. 點下 **安裝** 完成插件安裝
 
 ## 🔠 文檔裡的名詞解釋
 
