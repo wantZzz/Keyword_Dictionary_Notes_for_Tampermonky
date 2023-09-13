@@ -7,6 +7,9 @@ A Tampermonky plug-in that can record notes based on keywords on various website
 **注意 | Notice :** \
 現有版本只支持繁體中文 | The current version only supports Traditional Chinese
 
+**詳細的使用請見手冊 | Please refer to the manual for detailed usage:** \
+[Keyword Dictionary Notes 使用手冊](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/blob/main/Keyword_Dictionary_Notes_manual.md)
+
 ## 🔝 取得最新版本
 
 https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
