@@ -68,4 +68,5 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 ## 📰 更新歷史
 
-- 0.1 **bata測試版** 支援搜尋、新增、刪除關鍵字與筆記
+- v0.1 **正式版** 支援編輯關鍵字與筆記、調整插件在網頁的顯示與功能相容性、變更樣式
+- v0.1-beta **beta測試版** 支援搜尋、新增、刪除關鍵字與筆記
