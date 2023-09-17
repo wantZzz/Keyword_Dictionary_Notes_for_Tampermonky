@@ -73,7 +73,7 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 > 從頁面上找到標記起的關鍵字並開啟簡易關鍵字懸浮視窗，在文字框輸入筆記內容 **當換行時會自動記錄該筆記**
 
-tips: 使用快捷鍵 `Ctrl + Y` 可再寫一份新筆記
+tips: 使用快捷鍵 `Ctrl + Y` 可再寫一份新筆記，但 **請先儲存之前對筆記的更改(不會自動儲存)**
 
 ### 刪除關鍵字筆記
 
