@@ -1,6 +1,6 @@
 # Keyword Dictionary Notes 使用手冊
 
-### **❗備註: Keyword Dictionary Notes 現處於 Beta ，在 正式版 發布後本使用手冊將被修改**
+### **❗備註: Keyword Dictionary Notes 使用手冊現處於 v0.1 ，若有 新版 發布本使用手冊可能會修改**
 
 一個能夠在各網站以關鍵字紀錄筆記的油猴插件 \
 A Tampermonky plug-in that can record notes based on keywords on various websites
