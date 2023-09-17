@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Keyword Dictionary Notes
 // @namespace    http://tampermonkey.net/
-// @version      v0.1-beta.2
+// @version      v0.1
 // @description  Just highlight keyword in webpage and show up / write down your note about this keyword.
 // @author       WannaZzz
 // @match        https://*
@@ -19,11 +19,15 @@
 
 (function() {
     'use strict';
+	if(document.querySelector('keywordnote')){
+		return
+	}
 
 	var is_keywordPositions = false;// 是否開啟紀錄關鍵字位置
     var keywordPositions = {};// 用於紀錄關鍵字-位置的空字典
 	var keywordsToSearch = [];// 已記錄的關鍵字清單
 	var keyword_reserved_words = ['keywordsNote_priority', 'keywordsToSearch', 'keywordsSetting', 'AutoTriggerUrl'];
+	var is_areadysearch = false;
 
 	var popup_keyword = '';
 	var popup_keyword_note_showup_id = 0;
@@ -33,10 +37,13 @@
 
 	var timeout_popup;
 	var is_popuphide = true;
+	var list_popuphide = [];
 
 	var window_keyword = '';
 	var window_is_needrefresh = true;
 	var is_editing_id = null;
+
+	var textarea_is_composing = false;
 
 	function set_up(){
 		var keywordsToSearch_set = GM_getValue("keywordsToSearch", null);
@@ -384,7 +391,7 @@
 			var html = text;
 			if(!is_keywordPositions){
 				keywordsToSearch.forEach(function(keyword) {
-					html = html.replace(new RegExp(keyword, 'g'), '<span class="highlight-keyword" style="background-color: yellow;padding: 0;">$&</span>');
+					html = html.replace(new RegExp(keyword, 'g'), '<span class="highlight-keyword keyword-mark-show">$&</span>');
 				});
 			}else{
 				var keywords_in_text = []
@@ -402,7 +409,7 @@
 					console.log(xpath)
 
 					keywords_in_text.forEach(function(keyword) {
-						html = html.replace(new RegExp(keyword, 'g'), '<span class="highlight-keyword" style="background-color: yellow;padding: 0;">$&</span>');
+						html = html.replace(new RegExp(keyword, 'g'), '<span class="highlight-keyword keyword-mark-show">$&</span>');
 						if(!keywordPositions[keywords_in_text]){
 							keywordPositions[keywords_in_text] = [];
 						}
@@ -422,12 +429,20 @@
 			node.parentNode.replaceChild(replacement, node);
 		}else if(node.nodeName === 'KEYWORDNOTE'){
 			return
-		}else if(node.className === 'highlight-keyword'){
+		}else if(is_there_has_class(node)){
 			return
 		}else if (node.nodeType === Node.ELEMENT_NODE) {
 			for (var i = 0; i < node.childNodes.length; i++) {
 				highlightKeyword(node.childNodes[i]);
 			}
+		}
+	}
+
+	function is_there_has_class(node){
+		try{
+			return node.classList.contains('highlight-keyword');
+		}catch{
+			return false
 		}
 	}
 
@@ -460,67 +475,75 @@
         const keywordSpans = document.querySelectorAll(".highlight-keyword");
 
         keywordSpans.forEach(function (span) {
-            span.addEventListener("mouseover", function (event) {
-				if(is_popuphide){
-					return
-				}
-
-				const keyword_title = span.innerText;
-
-				if(popup_is_needrefresh || !(keyword_title === popup_keyword)){
-					var keyword_data = get_keyword_data(keyword_title);
-
-					var popup_keyword_note_showup_id = get_note_priority(keyword_title);
-
-                    document.getElementById("keyword_title").innerText = keyword_title;
-					if(!keyword_data[popup_keyword_note_showup_id]){
-						document.getElementById("keyword_note_showup").innerText = "你還沒有關於此關鍵字的筆記喔，趕快紀錄些什麼吧!";
-					}else{
-						document.getElementById("keyword_note_showup").innerText = keyword_data[popup_keyword_note_showup_id][0];
-					}
-
-					popup_new_keyword_note_id = keyword_data.length;
-					popup_keyword = keyword_title;
-
-					document.getElementById("new_keyword_note_input").value = '';
-					popup_is_needrefresh = false;
-                    is_append = false;
-				}
-
-                clearTimeout(timeout_popup);
-
-                popup.style.opacity = "0";
-                popup.style.animation = "none";
-                popup.style.display = "block";
-
-
-                setTimeout(function () {
-                    popup.style.animation = "fade 0.5s linear";
-
-                    const mouseX = event.clientX + 10;
-                    const mouseY = event.clientY + 10 + window.scrollY;
-
-                    popup.style.left = mouseX + "px";
-                    popup.style.top = mouseY + "px";
-
-                    setTimeout(function () {
-                        popup.style.opacity = "1";
-                    }, 490);
-                }, 1000);
-            });
-
-            span.addEventListener("mouseout", function () {
-                timeout_popup = setTimeout(function () {
-                    popup.style.animation = "fadeOut 0.2s linear";
-
-                    setTimeout(function () {
-                        popup.style.display = "none";
-                        popup.style.animation = "none";
-                        popup.style.opacity = "0";
-                    }, 190);
-                }, 500);
-            });
+            span.addEventListener("mouseover", keyword_mouseover_event);
+            span.addEventListener("mouseout", keyword_mouseout_event);
         });
+	}
+
+	function keyword_mouseover_event(event){
+		if(is_popuphide){
+			return
+		}
+
+		const keyword_title = event.target.innerText;
+
+		if(list_popuphide.indexOf(keyword_title) >= 0){
+			return
+		}
+
+		if(popup_is_needrefresh || !(keyword_title === popup_keyword)){
+			var keyword_data = get_keyword_data(keyword_title);
+
+			var popup_keyword_note_showup_id = get_note_priority(keyword_title);
+
+			document.getElementById("keyword_title").innerText = keyword_title;
+			if(!keyword_data[popup_keyword_note_showup_id]){
+				document.getElementById("keyword_note_showup").innerText = "你還沒有關於此關鍵字的筆記喔，趕快紀錄些什麼吧!";
+			}else{
+				document.getElementById("keyword_note_showup").innerText = keyword_data[popup_keyword_note_showup_id][0];
+			}
+
+			popup_new_keyword_note_id = keyword_data.length;
+			popup_keyword = keyword_title;
+
+			document.getElementById("new_keyword_note_input").value = '';
+			popup_is_needrefresh = false;
+			is_append = false;
+		}
+
+		clearTimeout(timeout_popup);
+
+		popup.style.opacity = "0";
+		popup.style.animation = "none";
+		popup.style.display = "block";
+
+
+		setTimeout(function () {
+			popup.style.animation = "fade 0.5s linear";
+
+			const mouseX = event.clientX + 10;
+			const mouseY = event.clientY + 10 + window.scrollY;
+
+			popup.style.left = mouseX + "px";
+			popup.style.top = mouseY + "px";
+
+			setTimeout(function () {
+				popup.style.opacity = "1";
+			}, 490);
+		}, 1000);
+	}
+
+	function keyword_mouseout_event(){
+		timeout_popup = setTimeout(function () {
+
+			popup.style.animation = "fadeOut 0.2s linear";
+
+			setTimeout(function () {
+				popup.style.display = "none";
+				popup.style.animation = "none";
+				popup.style.opacity = "0";
+			}, 190);
+		}, 500);
 	}
 
 	//-遍歷網頁上顯示的文字
@@ -534,17 +557,21 @@
 	function datetime_output_format(){
         var currentdate = new Date();
 		var datetime = currentdate.getFullYear() + "/"
-		+ (currentdate.getMonth()+1) + "/"
-		+ currentdate.getDate() + " "
-		+ currentdate.getHours()+ ":"
-		+ currentdate.getMinutes() + ":"
-		+ currentdate.getSeconds();
+		+ (currentdate.getMonth()+1).toString().padStart(2,'0') + "/"
+		+ currentdate.getDate().toString().padStart(2,'0') + " "
+		+ currentdate.getHours().toString().padStart(2,'0') + ":"
+		+ currentdate.getMinutes().toString().padStart(2,'0') + ":"
+		+ currentdate.getSeconds().toString().padStart(2,'0');
 
 		return datetime
 	}
 
 	//設定初始設定與設定監控視窗事件 函式
     window.addEventListener('load', function() {
+		if(document.querySelector('keywordnote')){
+			return
+		}
+
         set_up();
 
         console.log(keywordPositions);
@@ -574,6 +601,7 @@
 				searchPageForKeywords();
 
 				setting_keyword_eventlistener();
+				is_areadysearch = true;
 			}
 
             if (startUpHead.classList.contains("on")) {
@@ -581,16 +609,19 @@
 				const keywordSpans = document.querySelectorAll(".highlight-keyword");
 
 				keywordSpans.forEach(function (span) {
-					span.style.backgroundColor = "yellow";
+					span.classList.add("keyword-mark-show");
+					//span.style.backgroundColor = "yellow";
 				});
 				is_popuphide = false;
+				list_popuphide = [];
 
             } else {
                 startUpText.innerText = "Show mark";
 				const keywordSpans = document.querySelectorAll(".highlight-keyword");
 
 				keywordSpans.forEach(function (span) {
-					span.style.backgroundColor = null;
+					span.classList.remove("keyword-mark-show");
+					//span.style.backgroundColor = null;
 				});
 				is_popuphide = true;
             }
@@ -620,16 +651,23 @@
 			"click", keyword_delete_data_click, false
 		);
 
-		document.getElementById("new_keyword_note_input").addEventListener (
-			'keypress',
-			function (e) {
-				if (e.key === 'Enter') {
-					new_keyword_note_input_enter()
-				}else if(e.which === 89 && e.ctrlKey){
-					new_keyword_note_input_ctrlY()
-				}},
-			false
-		);
+		function KeyPress(e) {
+			var evtobj = window.event? event : e
+			if (evtobj.key === 'Enter') new_keyword_note_input_enter();
+			else if (evtobj.keyCode == 89 && evtobj.ctrlKey) new_keyword_note_input_ctrlY();
+		}
+
+		const popup_textarea = document.getElementById("new_keyword_note_input");
+
+		popup_textarea.onkeydown = KeyPress;
+
+		popup_textarea.addEventListener("compositionstart", () => {
+			textarea_is_composing = true;
+		});
+
+		popup_textarea.addEventListener("compositionend", () => {
+			textarea_is_composing = false;
+		});
 
 		// 設定簡易關鍵字懸浮視窗在滑鼠觸碰 "簡易關鍵字懸浮視窗" 上關鍵字的事件
         popup.addEventListener("mouseenter", function () {
@@ -638,6 +676,9 @@
 
         popup.addEventListener("mouseleave", function () {
             timeout_popup = setTimeout(function () {
+				if(textarea_is_composing){
+					return
+				}
                 popup.style.animation = "fadeOut 0.2s linear";
 
                 setTimeout(function () {
@@ -656,6 +697,9 @@
 		);
 		document.getElementById("sidebar-refresh-button").addEventListener (
 			"click", sidebar_reload_button_click, false
+		);
+		document.getElementById("sidebar-research-button").addEventListener (
+			"click", sidebar_research_button_click, false
 		);
 		document.getElementById("sidebar-setting-button").addEventListener('click', () => {
 			overlay.style.display = 'flex';
@@ -706,11 +750,15 @@
 			keywordnote.querySelector(".mode-text").innerText = "Dark mode";
 		}
 
+		GM_addStyle('span.highlight-keyword{padding: 0 !important;}');
+
 		const spancss = quest_init_setting('keywordspancss');
 		if(spancss != "" || spancss != null){
 			document.getElementById("keyword-setting-css-input-box").value = spancss;
-			GM_addStyle(`span.highlight-keyword${spancss}`);
-			console.log(`span.highlight-keyword${spancss}`);
+			GM_addStyle(`span.highlight-keyword.keyword-mark-show${spancss}`);
+			console.log(`span.highlight-keyword.keyword-mark-show${spancss}`);
+		}else{
+			GM_addStyle('span.highlight-keyword.keyword-mark-show{background-color: yellow !important;}');
 		}
 
 		// 設定彈窗滑桿與按鈕事件
@@ -792,12 +840,34 @@
     }, false);
 
 	//簡易關鍵字懸浮視窗 函式
-	function keyword_note_show_all_click() {
+	function keyword_note_show_all_click(button_item) {
         trigger_detailed_note(popup_keyword);
+
+		var popup_frame = button_item.target.parentNode.parentNode;
+		popup_frame.style.display = "none";
+		popup_frame.style.animation = "none";
+		popup_frame.style.opacity = "0";
+
+		popup_is_needrefresh = true;
 	}
 
-	function keyword_unknow_function_click() {
-		trigger_alert_window("此功能暫未開放", 'warning');
+	function keyword_unknow_function_click(button_item) {
+		const keywordSpans = document.querySelectorAll(".highlight-keyword");
+
+		keywordSpans.forEach(function (span) {
+			if(span.innerText === popup_keyword){
+				span.classList.toggle("keyword-mark-show");
+			}
+		});
+
+		list_popuphide.push(popup_keyword);
+
+		clearTimeout(timeout_popup);
+
+		var popup_frame = button_item.target.parentNode.parentNode;
+		popup_frame.style.display = "none";
+		popup_frame.style.animation = "none";
+		popup_frame.style.opacity = "0";
 	}
 
 	function keyword_delete_data_click() {
@@ -834,6 +904,7 @@
 
 		var keyword_data = get_keyword_data(popup_keyword);
 		popup_new_keyword_note_id = keyword_data.length;
+		is_append = false;
 	}
 
 	function remove_delete_keyword_span(delete_keyword){
@@ -842,7 +913,8 @@
 		keywordSpans.forEach(function (span) {
 			if(span.innerText === delete_keyword){
 				var text = span.parentElement.innerHTML;
-				var html = text.replace(new RegExp(`<span class="highlight-keyword" style="background-color: yellow;padding: 0;">${delete_keyword}</span>`, 'g'), delete_keyword);
+				var html = text.replace(new RegExp(`<span class="highlight-keyword keyword-mark-show">${delete_keyword}</span>`, 'g'), delete_keyword);
+				html = html.replace(new RegExp(`<span class="highlight-keyword">${delete_keyword}</span>`, 'g'), delete_keyword);
 				span.parentElement.innerHTML = html;
 			}
 		});
@@ -856,7 +928,6 @@
 	}
 
 	//側邊功能欄 函式
-
 	function sidebar_new_keword_button_click(){
 		var new_keyword = window.prompt('請輸入新關鍵字', '');
 		if (new_keyword !== null && new_keyword !== "") {
@@ -893,6 +964,24 @@
 		}else{
 			trigger_detailed_note(window_keyword);
 		}
+	}
+
+	function sidebar_research_button_click(){
+		if(!is_areadysearch){
+			trigger_alert_window("你還沒有啟動關鍵字功能，請先啟動再使用本功能", 'warning');
+			return
+		}
+
+		const keywordSpans = document.querySelectorAll(".highlight-keyword");
+
+		keywordSpans.forEach(function (span) {
+			span.removeEventListener("mouseover", keyword_mouseover_event);
+            span.removeEventListener("mouseout", keyword_mouseout_event);
+		});
+
+		searchPageForKeywords();
+
+		setting_keyword_eventlistener();
 	}
 
 	function sidebar_setting_button_click(){
@@ -1171,6 +1260,7 @@
 			message_block_edit.className = 'windos-input-element';
 			message_block_edit.value = windos_message_content.innerText.replace("<br />", /\n/g);;
 			message_block_edit.setAttribute('type','text');
+			message_block_edit.style.height = `${windos_message_box.offsetHeight}px`;
 
 			windos_message_box.replaceWith(message_block_edit);
 			is_editing_id = note_id;
@@ -1364,7 +1454,7 @@
 											<div class="menu-bar">\
 												<div class="menu-keyword">\
 													<li class="search-box">\
-														<i class="bx bx-search icon"></i>\
+														<i class="bx bx-search keyword-icon"></i>\
 														<form autocomplete="off" action="">\
 															<input id="keyword-search-input" type="text" placeholder="search note...">\
 														</form>\
@@ -1372,31 +1462,37 @@
 													<ul class="menu-links">\
 														<li class="nav-link">\
 															<button id="sidebar-new-keword-button">\
-																<i class="bx bx-append-alt icon"></i>\
+																<i class="bx bx-append-alt keyword-icon"></i>\
 																<span class="keyword-text nav-text">Add new keyword</span>\
 															</button>\
 														</li>\
 														<li class="nav-link">\
 															<button id="sidebar-refresh-button">\
-																<i class="bx bx-refresh-alt icon"></i>\
+																<i class="bx bx-refresh-alt keyword-icon"></i>\
 																<span class="keyword-text nav-text">Refresh notes</span>\
 															</button>\
 														</li>\
 														<li class="nav-link">\
+															<button id="sidebar-research-button">\
+																<i class="bx bx-refresh-alt keyword-icon"></i>\
+																<span class="keyword-text nav-text">Research marks</span>\
+															</button>\
+														</li>\
+														<li class="nav-link">\
 															<button id="sidebar-setting-button">\
-																<i class="bx bx-setting-alt icon"></i>\
+																<i class="bx bx-setting-alt keyword-icon"></i>\
 																<span class="keyword-text nav-text">Setting</span>\
 															</button>\
 														</li>\
 														<li class="nav-link">\
 															<button id="sidebar-export-notes-button">\
-																<i class="bx bx-export-alt icon"></i>\
+																<i class="bx bx-export-alt keyword-icon"></i>\
 																<span class="keyword-text nav-text">Export notes</span>\
 															</button>\
 														</li>\
 														<li class="nav-link">\
 															<button id="sidebar-inport-notes-button">\
-																<i class="bx bx-import-alt icon"></i>\
+																<i class="bx bx-import-alt keyword-icon"></i>\
 																<span class="keyword-text nav-text">Import notes</span>\
 															</button>\
 														</li>\
@@ -1405,8 +1501,8 @@
 												<div class="bottom-content">\
 													<li class="start-up">\
 														<div class="show_unshow">\
-															<i class="bx bx-show icon k-show"></i>\
-															<i class="bx bx-unshow icon k-unshow"></i>\
+															<i class="bx bx-show keyword-icon k-show"></i>\
+															<i class="bx bx-unshow keyword-icon k-unshow"></i>\
 														</div>\
 														<span class="mode-text-start keyword-text">Start up</span>\
 														<div class="toggle-switch-start">\
@@ -1415,8 +1511,8 @@
 													</li>\
 													<li class="mode">\
 														<div class="sun-moon">\
-															<i class="bx bx-moon icon k-moon"></i>\
-															<i class="bx bx-sun icon k-sun"></i>\
+															<i class="bx bx-moon keyword-icon k-moon"></i>\
+															<i class="bx bx-sun keyword-icon k-sun"></i>\
 														</div>\
 														<span class="mode-text keyword-text">Light mode</span>\
 														<div class="toggle-switch-mode">\
@@ -1910,11 +2006,11 @@
 						margin-top: 10px;\
 					}\
 					keywordnote .keyword-sidebar header .keyword-image,\
-					keywordnote .keyword-sidebar .icon{\
+					keywordnote .keyword-sidebar .keyword-icon{\
 						min-width: 60px;\
 						border-radius: 6px;\
 					}\
-					keywordnote .keyword-sidebar .icon{\
+					keywordnote .keyword-sidebar .keyword-icon{\
 						min-width: 60px;\
 						border-radius: 6px;\
 						height: 100%;\
@@ -1924,7 +2020,7 @@
 						font-size: 20px;\
 					}\
 					keywordnote .keyword-sidebar .keyword-text,\
-					keywordnote .keyword-sidebar .icon{\
+					keywordnote .keyword-sidebar .keyword-icon{\
 						color: var(--text-color);\
 						transition: var(--tran-03);\
 					}\
@@ -2036,11 +2132,11 @@
 					keywordnote .keyword-sidebar li button:hover{\
 						background-color: var(--primary-color);\
 					}\
-					keywordnote .keyword-sidebar li button:hover .icon,\
+					keywordnote .keyword-sidebar li button:hover .keyword-icon,\
 					keywordnote .keyword-sidebar li button:hover .keyword-text{\
 						color: var(--sidebar-color);\
 					}\
-					keywordnote.dark .keyword-sidebar li button:hover .icon,\
+					keywordnote.dark .keyword-sidebar li button:hover .keyword-icon,\
 					keywordnote.dark .keyword-sidebar li button:hover .keyword-text{\
 						color: var(--text-color);\
 					}\
