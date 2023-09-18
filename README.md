@@ -34,7 +34,7 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 4. 點下你剛下載的擴充功能，名稱為 **竄改猴** 或 **Tampermonky**
 5. 進入 Tampermonky 的控制台(會新開分頁)
 6. 進到 **匯入匯出工具**
-7. 找到 **匯入** 並選擇檔案 **Keyword Dictionary Notes.user.js**
+7. 找到 **匯入** 並 "選擇檔案" ，找到你剛下載本的 **Keyword Dictionary Notes.user.js** 選擇並匯入
 8. 點下 **安裝** 完成插件安裝
 
 ### 使用
