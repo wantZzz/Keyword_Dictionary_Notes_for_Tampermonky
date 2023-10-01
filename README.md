@@ -17,6 +17,10 @@ https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases
 
 或者 [點我](https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/releases/latest) 取得最新版本
 
+## 💽 使用版權
+現版本涉及版權 | The current version involves copyright:
+- 側邊欄設計 | Sidebar Menu design: [CodingNepal](https://www.codingnepalweb.com/sidebar-menu-in-html-css-javascript-dark-light-mode/)
+
 ## 📖 使用須知
 
 **注意! 部分網站可能會無法正常顯示插件或是被遮擋!**
