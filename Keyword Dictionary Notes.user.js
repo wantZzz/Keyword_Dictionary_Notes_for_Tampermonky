@@ -51,7 +51,8 @@
 		var keywordsToSearch_set = GM_getValue("keywordsToSearch", null);
 		if(keywordsToSearch_set == null){
 			keywordsToSearch_set = [["这是一个圆角矩形。 \n它的高度会随着文本内容而变化，但上下边距保持8px。","test",false],["我好想睡覺，我的夢想是攀登枕頭山山峰","2023/9/9 10:20:36",false],["早安","2023/9/1 14:3:23",false]];
-			GM_setValue("keywordsToSearch", keywordsToSearch_set);
+			GM_setValue("keywordsToSearch", ['標籤']);
+            GM_setValue("標籤", keywordsToSearch_set);
 		}
 
 		var keywordsNote_priority_set = GM_getValue("keywordsNote_priority", null);
@@ -773,11 +774,12 @@
 		GM_addStyle('span.highlight-keyword{padding: 0 !important;}');
 
 		const spancss = quest_init_setting('keywordspancss');
-		if(spancss != "" || spancss != null){
+		if(spancss != "{\n\n}" && !(spancss.length <= 5)){
 			document.getElementById("keyword-setting-css-input-box").value = spancss;
 			GM_addStyle(`span.highlight-keyword.keyword-mark-show${spancss}`);
 			console.log(`span.highlight-keyword.keyword-mark-show${spancss}`);
 		}else{
+			document.getElementById("keyword-setting-css-input-box").value = spancss;
 			GM_addStyle('span.highlight-keyword.keyword-mark-show{background-color: yellow !important;}');
 		}
 
@@ -1011,10 +1013,6 @@
 		}else{
 			trigger_alert_window('網頁關鍵字內容已標記', 'ok');
 		}
-	}
-
-	function sidebar_setting_button_click(){
-		trigger_alert_window("此功能暫未開放", 'warning');
 	}
 
 	function sidebar_export_notes_button_click(){
