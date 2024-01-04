@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Keyword Dictionary Notes
-// @namespace    http://tampermonkey.net/
-// @version      v0.1.1
+// @namespace    https://github.com/wantZzz
+// @version      v0.1.2.dev-0
 // @description  Just highlight keyword in webpage and show up / write down your note about this keyword.
 // @author       WannaZzz
 // @match        https://*
@@ -46,6 +46,8 @@
 	var is_editing_id = null;
 
 	var textarea_is_composing = false;
+
+	var trigger_alert_id = 0;
 
 	function set_up(){
 		var keywordsToSearch_set = GM_getValue("keywordsToSearch", null);
@@ -674,8 +676,14 @@
 
 		function KeyPress(e) {
 			var evtobj = window.event? event : e
-			if (evtobj.key === 'Enter') new_keyword_note_input_enter();
-			else if (evtobj.keyCode == 89 && evtobj.ctrlKey) new_keyword_note_input_ctrlY();
+			if (evtobj.keyCode == 78 && evtobj.ctrlKey){
+				new_keyword_note_input_ctrlN();//新開
+				event.preventDefault();
+			}
+			else if (evtobj.keyCode == 83 && evtobj.ctrlKey){
+				new_keyword_note_input_ctrlS();//儲存
+				event.preventDefault();
+			}
 		}
 
 		const popup_textarea = document.getElementById("new_keyword_note_input");
@@ -837,6 +845,10 @@
 				mouseX = event.clientX - parseInt(getComputedStyle(elementSelected).left);
 				mouseY = event.clientY - parseInt(getComputedStyle(elementSelected).top);
                 elementSelected.style.transition = 'none';
+
+				if(!document.body.classList.contains('windos-container-moving')){
+					document.body.classList.add('windos-container-moving');
+				}
 		});
 
 		element.addEventListener('mousemove', function(event) {
@@ -849,6 +861,10 @@
 		element.addEventListener('mouseup', function(event) {
             elementSelected.style.transition = 'var(--tran-05)'
             elementSelected = undefined;
+
+			if(document.body.classList.contains('windos-container-moving')){
+				document.body.classList.remove('windos-container-moving');
+			}
 		});
 
 		//監控詳細關鍵字視窗縮放的事件
@@ -910,7 +926,7 @@
 		}
 	}
 
-	function new_keyword_note_input_enter() {
+	function new_keyword_note_input_ctrlS() {
 		var note = document.getElementById("new_keyword_note_input").value;
 		if(!is_append){
 			add_keyword_note(popup_keyword, note);
@@ -924,7 +940,7 @@
         }
 	}
 
-	function new_keyword_note_input_ctrlY() {
+	function new_keyword_note_input_ctrlN() {
 		document.getElementById("new_keyword_note_input").value = '';
 
 		var keyword_data = get_keyword_data(popup_keyword);
@@ -1421,8 +1437,12 @@
 	function trigger_alert_window(message, type){
 		const alertContainer = document.getElementById('keyword-alertContainer');
 		var message_copy = message;
+		trigger_alert_id += 1;
+		var class_trigger_alert_id = trigger_alert_id;
 
-		alertContainer.classList.add('keyword-alert-show');
+		if(!alertContainer.classList.contains('keyword-alert-show')){
+			alertContainer.classList.add('keyword-alert-show');
+		}
 
 		message_copy = message_copy.replace(/\r\n/g,"<br>");
 		message_copy = message_copy.replace(/\n/g,"<br>");
@@ -1431,17 +1451,17 @@
 
 		switch (type) {
 			case 'error':
-				alertContainer.style.backgroundColor =  '#EA0000';
+				alertContainer.style.backgroundColor = '#EA0000';
 				alertSign.innerText = '✖';
 				break;
 
 			case 'warning':
-				alertContainer.style.backgroundColor =  '#FFD306';
+				alertContainer.style.backgroundColor = '#FFD306';
 				alertSign.innerText = '!';
 				break;
 
 			case 'ok':
-				alertContainer.style.backgroundColor =  '#00A600';
+				alertContainer.style.backgroundColor = '#00A600';
 				alertSign.innerText = '✔';
 				break;
 
@@ -1450,8 +1470,10 @@
 		}
 
 		setTimeout(() => {
-			alertContainer.classList.remove('keyword-alert-show');
-		}, 3000);
+			if(class_trigger_alert_id == trigger_alert_id){
+				alertContainer.classList.remove('keyword-alert-show');
+			}
+		}, 2000);
 	}
 
 	//設定彈窗 函式
@@ -2248,7 +2270,12 @@
 		');
 
 		//詳細關鍵字視窗
-		GM_addStyle('keywordnote .windos-container {\
+		GM_addStyle('body.windos-container-moving{\
+						user-select:none; /* standard syntax */\
+						  -webkit-user-select:none; /* for Chrome、Safari */\
+						  -moz-user-select:none; /* for Mozilla、Firefox */\
+					}\
+					keywordnote .windos-container {\
 						opacity: 0;\
 						margin: 10px;\
 						border-radius: 10px;\
