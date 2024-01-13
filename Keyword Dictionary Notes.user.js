@@ -1,13 +1,11 @@
 // ==UserScript==
 // @name         Keyword Dictionary Notes
 // @namespace    https://github.com/wantZzz
-// @version      v0.1.2.dev-0
+// @version      0.1.2.dev-1
 // @description  Just highlight keyword in webpage and show up / write down your note about this keyword.
 // @author       WannaZzz
-// @match        https://*
-// @match        https://*/*
-// @match        http://*
-// @match        http://*/*
+// @require      https://cdn.ckeditor.com/ckeditor5/40.2.0/balloon-block/ckeditor.js
+// @require      https://cdn.ckeditor.com/ckeditor5/40.2.0/balloon-block/translations/zh.js
 // @match        https://hackmd.io/?nav=overview
 // @icon         data:image/png;base64,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
 // @downloadURL  https://github.com/wantZzz/Tampermonky_Keyword_Dictionary_Notes/raw/main/Keyword%20Dictionary%20Notes.user.js
@@ -24,7 +22,7 @@
 	if(document.querySelector('keywordnote')){
 		return
 	}
-
+	
 	var is_keywordPositions = false;// 是否開啟紀錄關鍵字位置
     var keywordPositions = {};// 用於紀錄關鍵字-位置的空字典
 	var keywordsToSearch = [];// 已記錄的關鍵字清單
@@ -36,8 +34,10 @@
 	var popup_new_keyword_note_id = 1;
 	var popup_is_needrefresh = true;
     var is_append = false;
+	var new_keyword_note_ckeditor;
 
-	var timeout_popup;
+	var timeout_popup_mouseon;
+	var timeout_popup_mouseout;
 	var is_popuphide = true;
 	var list_popuphide = [];
 
@@ -521,19 +521,19 @@
 			popup_new_keyword_note_id = keyword_data.length;
 			popup_keyword = keyword_title;
 
-			document.getElementById("new_keyword_note_input").value = '';
+			new_keyword_note_ckeditor.setData('');
 			popup_is_needrefresh = false;
 			is_append = false;
 		}
 
-		clearTimeout(timeout_popup);
+		clearTimeout(timeout_popup_mouseout);
 
+		
 		popup.style.opacity = "0";
 		popup.style.animation = "none";
 		popup.style.display = "block";
 
-
-		setTimeout(function () {
+		timeout_popup_mouseon = setTimeout(function () {
 			popup.style.animation = "fade 0.5s linear";
 
 			const mouseX = event.clientX + 10;
@@ -549,7 +549,9 @@
 	}
 
 	function keyword_mouseout_event(){
-		timeout_popup = setTimeout(function () {
+		clearTimeout(timeout_popup_mouseon)
+		
+		timeout_popup_mouseout = setTimeout(function () {
 
 			popup.style.animation = "fadeOut 0.2s linear";
 
@@ -677,6 +679,7 @@
 		function KeyPress(e) {
 			var evtobj = window.event? event : e
 			if (evtobj.keyCode == 78 && evtobj.ctrlKey){
+				console.log("ctrlN press");
 				new_keyword_note_input_ctrlN();//新開
 				event.preventDefault();
 			}
@@ -700,12 +703,13 @@
 
 		// 設定簡易關鍵字懸浮視窗在滑鼠觸碰 "簡易關鍵字懸浮視窗" 上關鍵字的事件
         popup.addEventListener("mouseenter", function () {
-            clearTimeout(timeout_popup);
+            clearTimeout(timeout_popup_mouseout);
         });
 
         popup.addEventListener("mouseleave", function () {
-            timeout_popup = setTimeout(function () {
-				if(textarea_is_composing){
+            timeout_popup_mouseout = setTimeout(function () {
+				var ckeditor_is_focus = document.activeElement.className.match("ck");
+				if(textarea_is_composing || ckeditor_is_focus){
 					return
 				}
                 popup.style.animation = "fadeOut 0.2s linear";
@@ -718,6 +722,25 @@
             }, 500); //
         });
 
+		//CKEditor 5 文字編輯器設定
+		var BalloonEditor = window.BalloonEditor;
+		
+		BalloonEditor.create(document.querySelector('#new_keyword_note_input'),{
+                                toolbar:['bold','italic','link', 
+                                         'bulletedList', 
+                                         'numberedList', 
+                                         '|','outdent','indent'],
+								placeholder: '在此輸入新筆記',
+								language: 'zh'
+                            })
+			.then( editor => {
+				console.log('ckEditor was initialized');
+				new_keyword_note_ckeditor = editor;
+			} )
+			.catch( error => {
+				console.error( error );
+			} );
+		
 		// 設定側邊功能欄按紐事件
 		const overlay = document.getElementById('overlay');
 
@@ -758,18 +781,6 @@
 		const InitModeHead = keywordnote.querySelector(".k-init-mode");
 		const InitModeSwitch = keywordnote.querySelector(".toggle-switch-initmode");
         const InitModeText = keywordnote.querySelector(".initmode-text-start");
-
-		if(isin_autostartup_list()){
-			keywordnote.querySelector(".isauto-text-start").innerText = '此網域 "自動" 尋找關鍵字';
-			keywordnote.querySelector(".k-is-auto").classList.toggle("on");
-
-			keywordnote.querySelector(".mode-text-start").innerText = 'Hide mark';
-			keywordnote.querySelector(".start-up").classList.toggle("on");
-
-			searchPageForKeywords();
-
-			setting_keyword_eventlistener();
-		}
 
 		if(quest_init_setting('init_darkmode')){
 			keywordnote.querySelector(".initmode-text-start").innerText = '初始 "黑暗" 模式';
@@ -874,9 +885,16 @@
 
         windos_container.style.left = '0px';
         windos_container.style.top = '0px';
-        windos_container.style.zIndex = -5;
+        windos_container.style.zIndex = -5;	
+		
+		//自動搜尋
+		if(isin_autostartup_list()){
+			setTimeout(function () {
+				startUpSwitch.click();
+			}, 1000);
+		}
     }, false);
-
+		
 	//簡易關鍵字懸浮視窗 函式
 	function keyword_note_show_all_click(button_item) {
         trigger_detailed_note(popup_keyword);
@@ -900,7 +918,7 @@
 
 		list_popuphide.push(popup_keyword);
 
-		clearTimeout(timeout_popup);
+		clearTimeout(timeout_popup_mouseout);
 
 		var popup_frame = button_item.target.parentNode.parentNode;
 		popup_frame.style.display = "none";
@@ -927,7 +945,7 @@
 	}
 
 	function new_keyword_note_input_ctrlS() {
-		var note = document.getElementById("new_keyword_note_input").value;
+		var note = new_keyword_note_ckeditor.getData();
 		if(!is_append){
 			add_keyword_note(popup_keyword, note);
             is_append = true;
@@ -941,7 +959,7 @@
 	}
 
 	function new_keyword_note_input_ctrlN() {
-		document.getElementById("new_keyword_note_input").value = '';
+		new_keyword_note_ckeditor.setData('');
 
 		var keyword_data = get_keyword_data(popup_keyword);
 		popup_new_keyword_note_id = keyword_data.length;
@@ -1583,7 +1601,7 @@
 													這是一個圓角矩形。<br>\
 													它的高度會隨著文字內容而變化，但上下邊距保持8px。\
 												</div>\
-												<textarea id="new_keyword_note_input" class="input-element" type="text" placeholder="在此輸入新筆記"></textarea>\
+												<div id="new_keyword_note_input" class="input-element"></div>\
 											</div>\
 										</div>\
 										<div class="windos-container" id="windos-container">\
@@ -1782,7 +1800,8 @@
 						margin-inline-start: 0px;\
 						margin-inline-end: 0px;\
 						font-weight: bold;\
-					}');
+					}\
+		');
 
 		//警報彈窗
 		GM_addStyle('keywordnote .keyword-alert-show {\
@@ -1818,7 +1837,8 @@
 						font-family: "Poppins", sans-serif;\
 						color: #707070;\
 						font-weight: bold;\
-					}');
+					}\
+		');
 
 		//側邊功能欄建議輸入
 		GM_addStyle('.autocomplete-items {\
@@ -1847,7 +1867,8 @@
 					.autocomplete-active {\
 						background-color: DodgerBlue !important; \
 						color: #ffffff; \
-					}');
+					}\
+		');
 
 		//簡易關鍵字懸浮視窗
 		GM_addStyle('@keyframes fade {from {opacity: 0;}to {opacity: 1;}}\
@@ -1911,12 +1932,13 @@
 						box-sizing: border-box;\
 						background-color: var(--primary-color-light);\
 						color: var(--text-color);\
-						border-radius: 8px;\
+						border-radius: 8px !important;\
 						margin-bottom: 8px; /* 與下方輸入框保持間距 */\
 						resize: vertical;\
 						overflow: hidden;\
 						border: 1px solid #ccc;\
 						padding: 8px;\
+						list-style-position: inside;\
 					}\
 		');
 
@@ -2361,6 +2383,22 @@
 						/*max-height: 510px;*/\
 					}\
 					\
+					keywordnote .windos-message-content {\
+						list-style-position: inside;\
+					}\
+					keywordnote .windos-message-content .table table{\
+						border: 1px double #b3b3b3;\
+						border-collapse: collapse;\
+						border-spacing: 0;\
+						height: 100%;\
+						width: 100%;\
+					}\
+					keywordnote .windos-message-content .table table td, keywordnote .windos-message-content .table table th {\
+						border: 1px solid #bfbfbf;\
+						min-width: 2em;\
+						padding: 0.4em;\
+					}\
+					\
 					keywordnote .windos-message-timestamp {\
 						text-align: left;\
 						float: left;\
@@ -2400,6 +2438,13 @@
 					keywordnote .windos-message-block {\
 						margin: 0 8px;\
 						border-bottom: 1px solid #e3e3e3;\
-					}');
+					}\
+		');
+	
+		//CKEditor 5 文字編輯器設定
+		GM_addStyle(':root {\
+						--ck-z-default: 10000 !important;\
+					}\
+		');
 	}
 })();
